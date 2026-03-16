@@ -1,11 +1,15 @@
-const menu = document.getElementById("menu")
+const menu = document.getElementById("menu");
 const listJson = "https://opensheet.elk.sh/1dUpN4a6PFuxnxCU1S_fTniiGmifhha8X3XfNYvszbjc/cardapio1";
+const imgGoogle = "https://lh3.googleusercontent.com/d/";
 
 fetch(listJson)
 .then(res => res.json())
 .then(produtos => {
 
+    const title = document.getElementById("title")
     const menu = document.getElementById("menu")
+    
+    title.innerText = produtos[0].comercio;
 
     const categorias = {}
 
@@ -24,11 +28,11 @@ fetch(listJson)
         menu.innerHTML += `<div class="categoria">${nomeCategoria}</div>`
 
         categorias[nomeCategoria].forEach(item => {
-
+           
             menu.innerHTML += `
             <div class="item">
 
-            <img src="${item.img}">
+            <img src="${imgGoogle+item.img}">
 
             <div class="info">
             <div class="nome">${item.nome}</div>
