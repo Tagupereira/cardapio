@@ -1,0 +1,42 @@
+{
+  "categorias":[
+
+    {
+      "nome":"Açaí",
+      "itens":[
+        {
+          "nome":"Açaí Tradicional",
+          "preco":"12,90",
+          "img":"img/1.png"
+        },
+        {
+          "nome":"Açaí com Banana",
+          "preco":"15,90",
+          "img":"img/2.png"
+        },
+        {
+          "nome":"Açaí com Morango",
+          "preco":"17,90",
+          "img":"img/3.png"
+        }
+      ]
+    },
+
+    {
+      "nome":"Hambúrgueres",
+      "itens":[
+        {
+          "nome":"A moda da casa ",
+          "preco":"18,90",
+          "img":"img/pizza.jpg"
+        },
+        {
+          "nome":"frango com catupiry",
+          "preco":"24,90",
+          "img":"img/pizza.jpg"
+        }
+      ]
+    }
+
+  ]
+}
