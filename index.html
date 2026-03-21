@@ -51,7 +51,7 @@
             color: #ffffff;
             /* background: black; */
             font-size: 2rem;
-            background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgvSe0IPP1rzHlp_qPoH78f6B_iTJbqw3pAQ&s);
+            /* background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgvSe0IPP1rzHlp_qPoH78f6B_iTJbqw3pAQ&s); */
             background-size: cover;
             background-position: center;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
@@ -146,6 +146,7 @@
                 const menu = document.getElementById("menu")
 
                 title.innerText = produtos[0].comercio;
+                title.style.backgroundImage = `url(${produtos[1].comercio})`;
 
                 const categorias = {}
 
