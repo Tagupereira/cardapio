@@ -62,7 +62,7 @@
             width: 100%;
             align-items: center;
             padding: 5px;
-            border-bottom: 1px solid #333;
+            /* border-bottom: 1px solid #333; */
             /* justify-content: space-around; */
             flex-direction: column;
             text-align: center;
@@ -100,6 +100,7 @@
         .preco {
             color: #ffcc00;
             font-size: 2.5rem;
+            margin-bottom: 10px;
         }
         summary{
             background: #000;
@@ -109,6 +110,9 @@
             font-size: 2.5rem;
             margin:5px 0;
             list-style: none;
+        }
+        summary::-webkit-details-marker {
+            display: none;
         }
         
         details[open] summary {
@@ -122,6 +126,7 @@
 <body>
     <div class="container">
         <h1 id="title" class="titulo changa-one-regular-italic"></h1>
+        
         <div id="menu" class="changa-one-regular"></div>
     </div>
 
