@@ -1,194 +1,241 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport" />
-        <title>Cardápio</title>
-        <link rel="stylesheet" href="style.css">
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&display=swap');
-*{
-    box-sizing: border-box;
-}
 
-.changa-one-regular {
-  font-family: "Changa One", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport" />
+    <title>Cardápio</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&display=swap');
 
-.changa-one-regular-italic {
-  font-family: "Changa One", sans-serif;
-  font-weight: 400;
-  font-style: italic;
-}
-
-body {
-    background: #111;
-    font-family: Arial;
-    display: flex;
-    justify-content: center;
-    margin: 0;
-}
-
-.container {
-    /* width: 360px; */
-    background: #1a1a1a;
-    color: white;
-    min-height: 100vh;
-}
-
-.titulo {
-    text-align: center;
-    padding: 40px 0;
-    margin:0;
-    background: black;
-    font-size: 2rem;
-    
-}
-
-
-.categoria {
-    background: #000;
-    color: #ffcc00;
-    text-align: center;
-    padding: 10px;
-    font-size: 3rem;
-}
-
-.item {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    padding: 05px;
-    border-bottom: 1px solid #333;
-    justify-content: space-around;
-    flex-direction: row;
-}
-
-.item img {
-    width: 50%;
-    height: 200px;
-    border-radius: 10px;
-    object-fit: cover;
-}
-
-.info {
-    
-    width: 100%;
-    height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
-    padding: 5px;
-}
-
-.nome {
-    /* font-weight: bold; */
-    text-align: center;
-    font-size: 2rem;
-    font-family:"poppins";
-}
-
-.preco {
-    color: #ffcc00;
-    font-size: 2em;
-}
-        </style>
-
-    </head>
-
-    <body>
-        <div class="container">
-            <h1 id="title" class="titulo changa-one-regular-italic">Cardápio</h1>
-            <div id="menu" class="changa-one-regular"></div>
-        </div>
-        
-        <script src="script.js"></script>
-        <script>
-            const menu = document.getElementById("menu");
-const listJson = "https://opensheet.elk.sh/1dUpN4a6PFuxnxCU1S_fTniiGmifhha8X3XfNYvszbjc/cardapio1";
-const imgGoogle = "https://lh3.googleusercontent.com/d/";
-
-fetch(listJson)
-.then(res => res.json())
-.then(produtos => {
-
-    const title = document.getElementById("title")
-    const menu = document.getElementById("menu")
-    
-    title.innerText = produtos[0].comercio;
-
-    const categorias = {}
-
-    produtos.forEach(prod => {
-
-        if(!categorias[prod.categoria]){
-            categorias[prod.categoria] = []
+        * {
+            box-sizing: border-box;
         }
 
-        categorias[prod.categoria].push(prod)
+        body {
+            width: 100%;
+        }
 
-    })
+        .changa-one-regular {
+            font-family: "Changa One", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
 
-    Object.keys(categorias).forEach(nomeCategoria => {
+        .changa-one-regular-italic {
+            font-family: "Changa One", sans-serif;
+            font-weight: 400;
+            font-style: italic;
+        }
 
-        menu.innerHTML += `<div class="categoria">${nomeCategoria}</div>`
+        body {
+            background: #111;
+            font-family: Arial;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
 
-        categorias[nomeCategoria].forEach(item => {
-           
-            menu.innerHTML += `
-            <div class="item">
+        .container {
+            width: 100%;
+            background: #1a1a1a;
+            color: white;
+            min-height: 100vh;
+        }
 
-            <img src="${imgGoogle+item.img}">
+        .titulo {
+            text-align: center;
+            padding: 40px 0;
+            margin: 0;
+            color: #ffffff;
+            /* background: black; */
+            font-size: 2rem;
+            background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgvSe0IPP1rzHlp_qPoH78f6B_iTJbqw3pAQ&s);
+            background-size: cover;
+            background-position: center;
+        }
 
-            <div class="info">
-            <div class="nome">${item.nome}</div>
-            <div class="preco">R$ ${item.preco}</div>
-            </div>
+        
+        .item {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+            /* justify-content: space-around; */
+            flex-direction: column;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+        }
 
-            </div>
-            `
+        .item img {
+            width: 100%;
+            height: 100px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
 
-        })
+        .info {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 10px;
+        }
 
-    })
+        .nome {
+            text-align: center;
+            font-size: 2rem;
+            font-family: "poppins";
+            color: #ffffff;
+        }
 
-})
+        .description{
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 100;
+        }
 
-// fetch("produtos.json")
-// .then(res => res.json())
-// .then(data => {
+        .preco {
+            color: #ffcc00;
+            font-size: 2.5rem;
+        }
+        summary{
+            background: #000;
+            color: #ffcc00;
+            text-align: center;
+            padding: 10px;
+            font-size: 2.5rem;
+            margin:5px 0;
+            list-style: none;
+        }
+        
+        details[open] summary {
+            background: #791818;
+        }
 
-//     data.categorias.forEach(categoria => {
+    </style>
 
-//         menu.innerHTML += `
-//         <div class="categoria">
-//             ${categoria.nome}
-//         </div>
-//         `
+</head>
 
-//         categoria.itens.forEach(item => {
+<body>
+    <div class="container">
+        <h1 id="title" class="titulo changa-one-regular-italic"></h1>
+        <div id="menu" class="changa-one-regular"></div>
+    </div>
 
-//         menu.innerHTML += `
-//         <div class="item">
+    <!-- <script src="script.js"></script> -->
+    <script>
+        const menu = document.getElementById("menu");
+        const listJson = "https://opensheet.elk.sh/1dUpN4a6PFuxnxCU1S_fTniiGmifhha8X3XfNYvszbjc/cardapio1";
+        const imgGoogle = "https://lh3.googleusercontent.com/d/";
 
-//             <img src="${item.img}">
+        fetch(listJson)
+            .then(res => res.json())
+            .then(produtos => {
 
-//             <div class="info">
-//                 <div class="nome">${item.nome}</div>
-//                 <div class="preco">R$ ${item.preco}</div>
-//             </div>
+                const title = document.getElementById("title")
+                const menu = document.getElementById("menu")
 
-//         </div>
-//         `
+                title.innerText = produtos[0].comercio;
 
-//         })
+                const categorias = {}
 
-//     })
+                produtos.forEach(prod => {
 
-// })
-        </script>
-    </body>
+                    if (!categorias[prod.categoria]) {
+                        categorias[prod.categoria] = []
+                    }
+
+                    categorias[prod.categoria].push(prod)
+
+                })
+
+
+
+                Object.keys(categorias).forEach(nomeCategoria => {
+
+                    const itensAtivos = categorias[nomeCategoria].filter(item => item.estado === "on");
+
+                    if (itensAtivos.length > 0) {
+
+                        menu.innerHTML += `
+                            <details class="categoria">
+                                <summary>${nomeCategoria}</summary>
+
+                                ${itensAtivos.map(item => `
+                                    <div class="item">
+
+                                        
+                                        <img src="${imgGoogle + item.img}">
+
+                                     <div class="info">
+                                         <div class="nome">${item.nome}</div>
+                                         <p class="description">${item.descricao}</p>
+                                         <div class="preco">R$ ${item.preco}</div>
+                                     </div>
+
+                                    </div>
+                                `).join("")}
+                            </details>
+                        `;
+                    }
+
+                });
+
+                menu.addEventListener("toggle", (e) => {
+                    if (e.target.tagName === "DETAILS" && e.target.open) {
+
+                        // fecha os outros
+                        menu.querySelectorAll("details").forEach(outro => {
+                            if (outro !== e.target) {
+                                outro.open = false;
+                            }
+                        });
+
+                        // faz scroll suave até o item
+                        e.target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                    }
+                }, true);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Object.keys(categorias).forEach(nomeCategoria => {
+
+                //     const temItemAtivo = categorias[nomeCategoria].some(item => item.estado === "on");
+
+                //     if (temItemAtivo) {
+                //         menu.innerHTML += `<div class="categoria">${nomeCategoria}</div>`;
+
+                //         categorias[nomeCategoria].forEach(item => {
+
+                //             if (item.estado === "on") {
+
+                //                 menu.innerHTML += `
+
+                //                 <div class="item">
+
+                //                     <img src="${imgGoogle + item.img}">
+
+                //                     <div class="info">
+                //                         <div class="nome">${item.nome}</div>
+                //                         <div class="preco">R$ ${item.preco}</div>
+                //                     </div>
+
+                //                 </div>
+
+                //                 `;
+                //             }
+                //         });
+                //     }
+                // });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                
+            })
+
+            
+    </script>
+</body>
+
 </html>
