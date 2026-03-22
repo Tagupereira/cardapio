@@ -194,17 +194,7 @@
                 topo.style.backgroundImage = `url(${configuracao[0].backgroundurl + (imgGoogle+configuracao[0].backgrounddrive)})`;
                 logo.setAttribute("src", configuracao[0].logourl + (imgGoogle+configuracao[0].logodrive));
 
-                const categorias = {}
 
-                produtos.forEach(prod => {
-
-                    if (!categorias[prod.categoria]) {
-                        categorias[prod.categoria] = []
-                    }
-
-                    categorias[prod.categoria].push(prod)
-
-                })
             })
 
 //////////////////////////////////////////////////////////////
