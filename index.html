@@ -65,7 +65,7 @@
             border-radius: 50%;
         }
         .menu{
-            margin-bottom: 60px;
+           margin-bottom: 60px;
         }
         .item {
             display: flex;
@@ -140,8 +140,7 @@
             background: #000;
             text-align: center;
             padding: 20px;
-            
-            position: sticky;
+            position: fixed;
             bottom: 0;
         }
        .footer a{
@@ -149,6 +148,12 @@
             font-size: 1rem;
             text-decoration:none;
        }
+       @supports (-webkit-touch-callout: none) {
+            .footer {
+                position: sticky;
+                bottom: 0;
+            }
+        }
 
     </style>
 
