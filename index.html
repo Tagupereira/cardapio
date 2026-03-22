@@ -43,24 +43,33 @@
             width: 100%;
             background: #1a1a1a;
             color: white;
-            min-height: 100vh;
-            
+            min-height: 100vh;           
         }
-
-        .titulo {
-            text-align: center;
-            padding: 40px 0;
-            margin: 0 0 20px;
+        .topo{
+            padding: 20px 0;
+            margin: 0 0 10px;
             color: #ffffff;
-            /* background: black; */
-            font-size: 2rem;
-            /* background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgvSe0IPP1rzHlp_qPoH78f6B_iTJbqw3pAQ&s); */
+            font-size: 1rem;
             background-size: cover;
             background-position: center;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            text-align: center;
         }
-
-        
+        .title{
+            margin:auto;
+        }
+        .logo{
+            width: 150px;
+            /* height: 100px; */
+            border-radius: 50%;
+        }
+        .menu{
+            margin-bottom: 60px;
+        }
         .item {
             display: flex;
             width: 100%;
@@ -87,6 +96,11 @@
             justify-content: space-evenly;
             align-items: center;
             padding: 10px;
+        }
+        .cardapioTitle{
+            text-align: center;
+            font-size: 2rem;
+            margin:10px;
         }
 
         .nome {
@@ -132,8 +146,8 @@
             padding: 20px;
             font-size: 1rem;
             position: fixed;
-    bottom: 0;
-    left: 0;
+            bottom: 0;
+            left: 0;
         }
        
 
@@ -143,9 +157,18 @@
 
 <body>
     <div class="container">
-        <h1 id="title" class="titulo changa-one-regular-italic"></h1>
+        <div id="topo" class="topo">
+            <img id="logo" class="logo" alt="">
+            <h1 id="title" class="titulo changa-one-regular-italic"></h1>            
+        </div>
+
         
-        <div id="menu" class="changa-one-regular"></div>
+        <div id="menu" class="menu changa-one-regular">
+            <p class="cardapioTitle categoria">
+                CARDÁPIO
+            </p>
+
+        </div>
     </div>
 
     
@@ -153,19 +176,46 @@
     <!-- <script src="script.js"></script> -->
     <script>
         const menu = document.getElementById("menu");
-        const listJson = "https://opensheet.elk.sh/1dUpN4a6PFuxnxCU1S_fTniiGmifhha8X3XfNYvszbjc/cardapio1";
+        const listJson = "https://opensheet.elk.sh/1dUpN4a6PFuxnxCU1S_fTniiGmifhha8X3XfNYvszbjc/";
+        const cardapio= "cardapio1";
+        const config= "config";
         const imgGoogle = "https://lh3.googleusercontent.com/d/";
+        const title = document.getElementById("title");
+        const topo = document.getElementById("topo");
+        const logo = document.getElementById("logo");
 
-        fetch(listJson)
+
+///////////////////////////////////////////fetch configurações
+         fetch(listJson+config)
+            .then(res => res.json())
+            .then(configuracao => {
+
+                
+                title.innerText = configuracao[0].comercio;
+                topo.style.backgroundImage = `url(${configuracao[0].backgroundurl + (imgGoogle+configuracao[0].backgrounddrive)})`;
+                logo.setAttribute("src", configuracao[0].logourl + (imgGoogle+configuracao[0].logodrive));
+
+                const categorias = {}
+
+                produtos.forEach(prod => {
+
+                    if (!categorias[prod.categoria]) {
+                        categorias[prod.categoria] = []
+                    }
+
+                    categorias[prod.categoria].push(prod)
+
+                })
+            })
+
+//////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////fetch lista cardapio
+        fetch(listJson+cardapio)
             .then(res => res.json())
             .then(produtos => {
 
-                const title = document.getElementById("title")
-                const menu = document.getElementById("menu")
-
-                title.innerText = produtos[0].comercio;
-                title.style.backgroundImage = `url(${produtos[1].comercio})`;
-
+                
                 const categorias = {}
 
                 produtos.forEach(prod => {
