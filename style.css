@@ -288,3 +288,12 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        summary {
+            list-style: none;
+        }
+
+        /* iPhone / Safari */
+        summary::-webkit-details-marker {
+            display: none;
+        }
