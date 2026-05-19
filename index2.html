@@ -41,7 +41,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
             min-height: 100vh;
             padding-bottom: 80px;
@@ -71,19 +71,19 @@
 
         .cart-count {
             position: absolute;
-            top: 0;
-            right: 0;
+            top: -4px;
+            right: -10px;
             background: #ff0000;
             color: white;
-            font-size: 0.7rem;
-            width: 22px;
-            height: 22px;
+            font-size: 0.9rem;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            border: 2px solid var(--bg-dark);
+            /* border: 2px solid var(--bg-dark); */
         }
 
         /* Modal / Cart View */
@@ -188,6 +188,8 @@
             cursor: pointer;
             transition: all 0.2s;
             font-weight: bold;
+            width: 100%;
+            height: 50px;
         }
 
         .add-to-cart-btn:hover {
@@ -257,6 +259,10 @@
             padding: 40px 0;
         } */
 
+        .category-group:first-of-type{
+            margin-top:-30px;
+
+        }
         .category-header {
             display: flex;
             text-align: center;
@@ -267,6 +273,7 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            z-index:99;
         }
 
         /* .category-header::after {
@@ -336,6 +343,7 @@
 
         .product-card {
             display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 15px;
             padding: 10px;
@@ -380,7 +388,7 @@
             display: flex;
             flex-direction: column;
             align-content: center;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
         }
 
@@ -551,7 +559,7 @@
         const imgGoogle = "https://lh3.googleusercontent.com/d/";
 
         let cart = [];
-        let waNumber = "5511999999999"; 
+        let waNumber = "5518996267155"; 
 
         const elements = {
             hero: document.getElementById('hero'),
@@ -758,13 +766,44 @@
             msg += `*Cliente:* ${name}\n`;
             msg += `*Opção de Entrega:* ${address}\n`;
             msg += `*Itens:*\n`;
+                        
+            // cart.forEach(item => {
+            //     const sub = item.price * item.qty;
+            //     total += sub;
+            //     msg += `*${item.category}*\n`;
+            //     msg += `* ${item.qty}x ${item.name}${item.size ? ' ('+item.size+')' : ''} (R$ ${sub.toFixed(2).replace('.', ',')})\n`;
+            // });
+
+            const grouped = {};
 
             cart.forEach(item => {
-                const sub = item.price * item.qty;
-                total += sub;
-                msg += `* ${item.qty}x ${item.name}${item.size ? ' ('+item.size+')' : ''} (R$ ${sub.toFixed(2).replace('.', ',')})\n`;
+                if (!grouped[item.category]) {
+                    grouped[item.category] = [];
+                }
+
+                grouped[item.category].push(item);
             });
 
+            // Montar mensagem agrupada
+            for (const category in grouped) {
+
+                msg += `\n*${category}*\n`;
+
+                grouped[category].forEach(item => {
+                    const sub = item.price * item.qty;
+                    total += sub;
+
+                    msg += `• ${item.qty}x ${item.name}`;
+
+                    if (item.size) {
+                        msg += ` (${item.size})`;
+                    }
+
+                    msg += ` - R$ ${sub.toFixed(2).replace('.', ',')}\n`;
+                });
+            }
+            msg +=`==================\n`
+            msg += `\n`;
             msg += `*Total:* R$ ${total.toFixed(2).replace('.', ',')}\n`;
             msg += `*Pagamento:* ${pay}\n`;
             
