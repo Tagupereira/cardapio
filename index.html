@@ -223,7 +223,11 @@ let waNumber = "5518996267155";
 let catalog = [];
 const CART_KEY = "cart:" + sheetID;
 let cart = [];
-try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem(CART_KEY));
+  if (Array.isArray(saved)) cart = saved.filter(x => x && typeof x.name === "string" && Number.isFinite(x.price) && Number.isInteger(x.qty) && x.qty > 0)
+    .map(x => ({ ...x, size: x.size || "", category: x.category || "", key: x.key || x.name + "|" + (x.size || "") }));
+} catch (e) {}
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -252,9 +256,27 @@ const ICONS = {
 const ic = (href, svg, label) => `<a class="ic" href="${esc(href)}" target="_blank" rel="noopener" aria-label="${label}"><svg viewBox="0 0 24 24">${svg}</svg></a>`;
 const toUrl = (v, base) => /^(https?:|mailto:)/.test(v) ? v : base + String(v).replace(/^@/, "");
 
+// Lê a planilha com limite de 8 s; se falhar, usa a última cópia salva neste aparelho
+async function getSheet(name) {
+  const key = "sheet:" + sheetID + ":" + name;
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(`https://opensheet.elk.sh/${sheetID}/${name}`, { signal: ctl.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    if (!Array.isArray(d)) throw new Error("resposta inválida");
+    try { localStorage.setItem(key, JSON.stringify(d)); } catch (e) {}
+    return d;
+  } catch (e) {
+    try { const c = JSON.parse(localStorage.getItem(key)); if (Array.isArray(c)) return c; } catch (_) {}
+    throw e;
+  }
+}
+
 async function loadConfig() {
   try {
-    const [c] = await (await fetch(`https://opensheet.elk.sh/${sheetID}/${configSheet}`)).json();
+    const c = (await getSheet(configSheet))[0];
+    if (!c) { $("comercio-name").textContent = "Cardápio"; return; }
     const name = c.comercio || "Pizzaria";
     $("comercio-name").textContent = name;
     $("mini-name").textContent = name; $("mini-name2").textContent = name;
@@ -262,7 +284,7 @@ async function loadConfig() {
     const logo = c.logourl || (c.logodrive ? imgGoogle + c.logodrive : "");
     if (logo) { $("logo").src = logo; $("logo").hidden = false; }
     if (c.whatsapp) waNumber = c.whatsapp;
-    // pixKey = String(c.pix || "").trim(); pixName = c.pixnome || name; updatePix();
+    pixKey = String(c.pix || "").trim(); pixName = c.pixnome || name; updatePix();
     const bg = c.backgroundurl || (c.backgrounddrive ? imgGoogle + c.backgrounddrive : "");
     if (bg) $("home").style.setProperty("--bg-img", `url("${bg}")`);
     if (c.subtitulo) $("subtitle").textContent = c.subtitulo;
@@ -272,17 +294,25 @@ async function loadConfig() {
     if (c.email) out.push(ic(toUrl(c.email, "mailto:"), ICONS.mail, "E-mail"));
     if (c.maps) out.push(ic(c.maps, ICONS.pin, "Localização"));
     $("social").innerHTML = out.join("");
-  } catch (e) { console.error("Erro ao carregar configurações:", e); }
+  } catch (e) {
+    console.error("Erro ao carregar configurações:", e);
+    if ($("comercio-name").textContent.startsWith("Carregando")) $("comercio-name").textContent = "Cardápio";
+  }
 }
 
 async function loadMenu() {
   try {
-    const products = await (await fetch(`https://opensheet.elk.sh/${sheetID}/${menuSheet}`)).json();
+    const products = await getSheet(menuSheet);
     const groups = {};
+    const seen = {};
     products.forEach(p => {
-      if (p.estado === "off" || !p.nome) return;
-      (groups[p.categoria] = groups[p.categoria] || []).push(p);
+      if (!p || String(p.estado || "").trim().toLowerCase() === "off" || !String(p.nome || "").trim()) return;
+      const cat = String(p.categoria || "").trim() || "Outros";
+      const k = slugify(cat) || "outros";
+      const nome = seen[k] || (seen[k] = cat);   // "Pastéis" e "PASTÉIS" viram a mesma categoria
+      (groups[nome] = groups[nome] || []).push(p);
     });
+    if (!Object.keys(groups).length) { $("track").innerHTML = '<p class="state" style="flex:0 0 100%">Cardápio indisponível no momento.</p>'; return; }
     renderMenu(groups);
   } catch (e) {
     console.error("Erro ao carregar menu:", e);
@@ -317,6 +347,7 @@ function renderMenu(groups) {
       }).join("")}</div>
     </section>`).join("");
   document.querySelectorAll(".th").forEach(img => img.addEventListener("error", () => img.remove()));
+  syncCart();
   go(cur, false);
   refresh();
   applyHash();
@@ -346,7 +377,9 @@ function showView(v) {
 
 // Link direto: seusite.com/#pasteis abre o cardápio já na categoria
 function applyHash() {
-  const i = slugs.indexOf(decodeURIComponent(location.hash.slice(1)));
+  let h = location.hash.slice(1);
+  try { h = decodeURIComponent(h); } catch (e) {}
+  const i = slugs.indexOf(h);
   if (i >= 0) { showView("menu"); go(i, false); }
 }
 
@@ -508,7 +541,10 @@ $("pix-box").addEventListener("click", e => {
 /* Meus pedidos + limpeza após o envio (salvo neste aparelho) */
 const ORD_KEY = "pedidos:" + sheetID, CLIENT_KEY = "cliente:" + sheetID;
 let orders = [];
-try { orders = JSON.parse(localStorage.getItem(ORD_KEY)) || []; } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem(ORD_KEY));
+  if (Array.isArray(saved)) orders = saved.filter(o => o && Array.isArray(o.items) && Number.isFinite(o.total) && Number.isFinite(o.ts));
+} catch (e) {}
 try {
   const k = JSON.parse(localStorage.getItem(CLIENT_KEY) || "{}");
   if (k.name) $("name").value = k.name;
@@ -574,6 +610,20 @@ $("orders").addEventListener("click", e => {
   }
   orders.splice(+del.dataset.del, 1); saveOrders(); renderOrders();
 });
+
+/* Confere o carrinho salvo com a planilha atual (preço mudou ou item saiu) */
+function syncCart() {
+  let changed = false; const gone = [];
+  cart = cart.filter(c => {
+    const it = catalog.find(x => x.name === c.name && x.category === c.category);
+    const p = it && it.prices.find(x => x.label === c.size);
+    if (!p) { gone.push(c.name); return false; }
+    if (p.price !== c.price) { c.price = p.price; changed = true; }
+    return true;
+  });
+  if (gone.length) toast("Removemos do pedido (indisponível): " + gone.join(", "));
+  else if (changed) toast("Alguns preços foram atualizados no seu pedido.");
+}
 </script>
 </body>
 </html>
