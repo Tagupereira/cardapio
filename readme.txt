@@ -16,7 +16,8 @@ o retorno deve ser algo parecido com o exemplo a baixo:
     "categoria": "PIZZA",
     "nome": "Frango catupiry",
     "preco": "55.00",
-    "img": "1BxsIxb8CST0--MLtrBGQafxm73t4Ij5E"
+    "img": "1BxsIxb8CST0--MLtrBGQafxm73t4Ij5E",
+    .......
 },
 
 para imagens do google drive tambem usamos um link personalizado + id da imagem
