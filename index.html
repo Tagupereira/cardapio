@@ -104,6 +104,13 @@ button{cursor:pointer}
 .send{width:100%;margin-top:22px;padding:16px;border:0;border-radius:14px;background:#1FAF55;color:#fff;font-weight:700;font-size:1.05rem;display:flex;align-items:center;justify-content:center;gap:10px}
 .hint{font-size:.8rem;color:var(--muted);text-align:center;margin-top:10px}
 body.lock{overflow:hidden}
+#split{margin-top:14px}
+.sline{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.sline select,.sline input{padding:12px;border:1.5px solid #3a3a3a;border-radius:12px;background:#1c1c1c}
+.sline select{flex:1 1 150px}.sline input{flex:1 1 100px;min-width:0}.sline .strc{flex:1 1 100%}
+.srem{width:44px;border:1.5px solid #3a3a3a;border-radius:12px;background:transparent;color:var(--muted)}
+.split-resumo{font-weight:700;margin:10px 0 4px;font-size:.92rem}
+.split-resumo.ok{color:#4ade80}.split-resumo.falta{color:var(--laranja)}
 .ord-title{font-family:var(--display);font-size:1.8rem;text-transform:uppercase;text-align:center;margin:14px 16px 10px}
 .ord-list{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:760px;margin:0 auto;padding:0 16px 24px}
 .ord{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:14px;margin-bottom:12px}
@@ -191,9 +198,16 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document
         <input id="addr" autocomplete="street-address" placeholder="Rua, número e bairro">
         <div class="err">Informe o endereço para entrega.</div></div>
       <div class="f"><label for="pay">Forma de pagamento</label>
-        <select id="pay"><option>Pix</option><option>Cartão de Crédito</option><option>Cartão de Débito</option><option>Dinheiro</option></select></div>
+        <select id="pay"><option>Pix</option><option>Cartão de Crédito</option><option>Cartão de Débito</option><option>Dinheiro</option><option value="dividir">Dividir em mais de uma forma</option></select></div>
+      <div id="split" hidden>
+        <div id="split-lines"></div>
+        <button type="button" id="split-add" class="btn outline" style="width:100%;padding:12px;font-size:.95rem">+ Adicionar outra forma</button>
+        <p id="split-resumo" class="split-resumo" aria-live="polite"></p>
+        <p id="split-erro" class="err" role="alert" style="display:block"></p>
+      </div>
       <div class="f" id="f-troco" hidden><label for="troco">Troco para quanto?</label>
-        <input id="troco" inputmode="decimal" placeholder="Ex: 50,00"></div>
+        <input id="troco" inputmode="decimal" placeholder="Ex: 100,00">
+        <div class="err" id="troco-erro"></div></div>
       <div class="pix" id="pix-box" hidden>
         <h3>Pague com Pix</h3>
         <p class="pix-v">Valor: <b id="pix-valor">R$ 0,00</b></p>
@@ -406,7 +420,7 @@ function refresh() {
   $("bar-n").textContent = count;
   $("bar-total").textContent = brl(total);
   if ($("sheet").classList.contains("open")) renderLines(total);
-  updatePix();
+  syncPagamento();
 }
 
 function renderLines(total) {
@@ -444,6 +458,7 @@ function sendWhatsApp() {
   $("f-addr").classList.toggle("bad", delivery && !addr);
   if (!name) return $("name").focus();
   if (delivery && !addr) return $("addr").focus();
+  if (!validarPagamento()) return;
 
   let total = 0;
   const grouped = {};
@@ -459,9 +474,17 @@ function sendWhatsApp() {
       if (c.obs && c.obs.trim()) msg += `   _Obs: ${c.obs.trim()}_\n`;
     });
   }
-  msg += `\n==================\n*Total:* ${brl(total)}\n*Pagamento:* ${$("pay").value === "Pix" && pixKey ? "Pix (comprovante será enviado em seguida)" : $("pay").value}\n`;
-  const troco = toNum($("troco").value);
-  if ($("pay").value === "Dinheiro" && !isNaN(troco)) msg += `*Troco para:* ${brl(troco)}\n`;
+  const modo = $("pay").value;
+  msg += `\n==================\n*Total:* ${brl(total)}\n`;
+  if (modo === "dividir") {
+    msg += `*Pagamento dividido:*\n`;
+    split.forEach(l => { msg += `• ${l.forma}: ${brl(money(l.valor))}${l.forma === "Dinheiro" && l.troco.trim() ? ` (troco para ${brl(money(l.troco))})` : ""}\n`; });
+    if (pixKey && split.some(l => l.forma === "Pix")) msg += `_Comprovante do Pix será enviado em seguida_\n`;
+  } else {
+    msg += `*Pagamento:* ${modo === "Pix" && pixKey ? "Pix (comprovante será enviado em seguida)" : modo}\n`;
+    const troco = money($("troco").value);
+    if (modo === "Dinheiro" && !isNaN(troco)) msg += `*Troco para:* ${brl(troco)}\n`;
+  }
   const obs = $("obs").value.trim();
   if (obs) msg += `*Obs. do pedido:* ${obs}\n`;
   window.open(`https://wa.me/${waNumber.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
@@ -483,7 +506,14 @@ $("close").addEventListener("click", closeSheet);
 $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) closeSheet(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 $("send").addEventListener("click", sendWhatsApp);
-$("pay").addEventListener("change", () => { $("f-troco").hidden = $("pay").value !== "Dinheiro"; updatePix(); });
+$("pay").addEventListener("change", () => {
+  const m = $("pay").value;
+  $("f-troco").hidden = m !== "Dinheiro";
+  $("split").hidden = m !== "dividir";
+  if (m === "dividir") { if (!split.length) initSplit(); renderSplit(); }
+  $("troco-erro").textContent = ""; $("f-troco").classList.remove("bad"); $("split-erro").textContent = "";
+  updatePix();
+});
 document.querySelectorAll('input[name="modo"]').forEach(r => r.addEventListener("change", () => {
   $("f-addr").hidden = mode() !== "Entrega";
 }));
@@ -514,11 +544,13 @@ $("lines").addEventListener("input", e => {
 /* Pix (chave e nome vêm da aba config: pix, pixnome) */
 let pixKey = "", pixName = "";
 function updatePix() {
-  const show = !!pixKey && $("pay").value === "Pix" && cart.length > 0;
+  const modo = $("pay").value;
+  const valorPix = modo === "Pix" ? totalPedido()
+    : modo === "dividir" ? split.filter(l => l.forma === "Pix").reduce((a, l) => a + (money(l.valor) || 0), 0) : 0;
+  const show = !!pixKey && cart.length > 0 && valorPix > 0;
   $("pix-box").hidden = !show;
   if (!show) return;
-  const total = cart.reduce((a, c) => a + c.qty * c.price, 0);
-  $("pix-valor").textContent = brl(total);
+  $("pix-valor").textContent = brl(valorPix);
   $("pix-nome").textContent = pixName ? "· " + pixName : "";
   $("pix-key").textContent = pixKey;
 }
@@ -560,13 +592,15 @@ function toast(msg) {
 
 function finishOrder(name, addr, delivery, total) {
   orders.unshift({
-    ts: Date.now(), total, mode: delivery ? "Entrega" : "Retirada", pay: $("pay").value,
+    ts: Date.now(), total, mode: delivery ? "Entrega" : "Retirada", pay: payLabel(),
     items: cart.map(c => ({ name: c.name, category: c.category, size: c.size, price: c.price, qty: c.qty, obs: c.obs || "" }))
   });
   orders = orders.slice(0, 20); saveOrders();
   try { localStorage.setItem(CLIENT_KEY, JSON.stringify({ name, addr })); } catch (e) {}
   cart = [];
   $("obs").value = ""; $("troco").value = "";
+  $("troco-erro").textContent = ""; $("f-troco").classList.remove("bad"); $("split-erro").textContent = "";
+  if (split.length) { initSplit(); renderSplit(); }
   closeSheet(); refresh();
   toast("Pedido enviado! Ele ficou salvo em Meus pedidos.");
 }
@@ -624,6 +658,88 @@ function syncCart() {
   if (gone.length) toast("Removemos do pedido (indisponível): " + gone.join(", "));
   else if (changed) toast("Alguns preços foram atualizados no seu pedido.");
 }
+
+/* Pagamento: troco válido e pagamento dividido */
+const FORMAS = ["Pix", "Cartão de Crédito", "Cartão de Débito", "Dinheiro"];
+let split = [];
+const cents = n => Math.round(n * 100);
+const totalPedido = () => cart.reduce((a, c) => a + c.qty * c.price, 0);
+// Aceita "50", "50,5", "12.50" e "1.500,00"
+const money = s => {
+  s = String(s ?? "").replace(/[^\d,.]/g, "");
+  if (!s) return NaN;
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+  return parseFloat(s);
+};
+const payLabel = () => $("pay").value === "dividir" ? "Dividido: " + [...new Set(split.map(l => l.forma))].join(" + ") : $("pay").value;
+
+function syncPagamento() { updatePix(); updateSplitSummary(); if ($("troco").value.trim()) checkTroco(); }
+
+function checkTroco() {
+  const v = $("troco").value.trim(), total = totalPedido();
+  const ruim = $("pay").value === "Dinheiro" && !!v && !(cents(money(v)) >= cents(total));
+  $("f-troco").classList.toggle("bad", ruim);
+  $("troco-erro").textContent = ruim ? `Digite um valor igual ou maior que o total (${brl(total)}).` : "";
+  return !ruim;
+}
+
+function initSplit() { split = [{ forma: "Pix", valor: "", troco: "" }, { forma: "Dinheiro", valor: "", troco: "" }]; }
+
+function renderSplit() {
+  $("split-lines").innerHTML = split.map((l, i) => `
+    <div class="sline" data-i="${i}">
+      <select data-k="forma" aria-label="Forma de pagamento ${i + 1}">${FORMAS.map(f => `<option${f === l.forma ? " selected" : ""}>${f}</option>`).join("")}</select>
+      <input data-k="valor" inputmode="decimal" placeholder="Valor" value="${esc(l.valor)}" aria-label="Valor da forma ${i + 1}">
+      ${split.length > 2 ? `<button type="button" class="srem" data-rm="${i}" aria-label="Remover forma ${i + 1}">✕</button>` : ""}
+      ${l.forma === "Dinheiro" ? `<input class="strc" data-k="troco" inputmode="decimal" placeholder="Troco para quanto? (opcional)" value="${esc(l.troco)}" aria-label="Troco da forma ${i + 1}">` : ""}
+    </div>`).join("");
+  updateSplitSummary();
+}
+
+function updateSplitSummary() {
+  if ($("pay").value !== "dividir") return;
+  const total = totalPedido(), soma = split.reduce((a, l) => a + (money(l.valor) || 0), 0), dif = cents(total) - cents(soma);
+  const el = $("split-resumo");
+  el.className = "split-resumo " + (dif === 0 && total > 0 ? "ok" : "falta");
+  el.textContent = dif === 0 ? `Tudo certo: ${brl(soma)} de ${brl(total)}`
+    : dif > 0 ? `Informado ${brl(soma)} de ${brl(total)} — falta ${brl(dif / 100)}`
+    : `Informado ${brl(soma)} de ${brl(total)} — passou ${brl(-dif / 100)}`;
+}
+
+function validarPagamento() {
+  const modo = $("pay").value, total = totalPedido();
+  if (modo === "Dinheiro") { const ok = checkTroco(); if (!ok) $("troco").focus(); return ok; }
+  if (modo !== "dividir") return true;
+  const soma = split.reduce((a, l) => a + (money(l.valor) || 0), 0);
+  let msg = "";
+  if (split.some(l => !(money(l.valor) > 0))) msg = "Informe o valor de cada forma de pagamento.";
+  else if (cents(soma) !== cents(total)) msg = `A soma dos pagamentos (${brl(soma)}) precisa ser igual ao total (${brl(total)}).`;
+  else {
+    const t = split.find(l => l.forma === "Dinheiro" && l.troco.trim() && !(cents(money(l.troco)) >= cents(money(l.valor))));
+    if (t) msg = `Em dinheiro, o troco deve ser para um valor igual ou maior que ${brl(money(t.valor))}.`;
+  }
+  $("split-erro").textContent = msg;
+  if (msg) $("split-resumo").scrollIntoView({ block: "center" });
+  return !msg;
+}
+
+$("troco").addEventListener("input", checkTroco);
+$("split-lines").addEventListener("input", e => {
+  const row = e.target.closest(".sline"), k = e.target.dataset.k; if (!row || !k) return;
+  split[+row.dataset.i][k] = e.target.value;
+  $("split-erro").textContent = ""; updateSplitSummary(); updatePix();
+});
+$("split-lines").addEventListener("change", e => { if (e.target.dataset.k === "forma") { renderSplit(); updatePix(); } });
+$("split-lines").addEventListener("click", e => {
+  const b = e.target.closest("[data-rm]"); if (!b) return;
+  split.splice(+b.dataset.rm, 1); renderSplit(); updatePix();
+});
+$("split-add").addEventListener("click", () => {
+  const falta = cents(totalPedido()) - cents(split.reduce((a, l) => a + (money(l.valor) || 0), 0));
+  split.push({ forma: FORMAS.find(f => !split.some(l => l.forma === f)) || "Pix", valor: falta > 0 ? (falta / 100).toFixed(2).replace(".", ",") : "", troco: "" });
+  renderSplit(); updatePix();
+});
 </script>
 </body>
 </html>
